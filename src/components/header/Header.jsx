@@ -116,7 +116,7 @@ function Header() {
   
       try {
         // Send login request
-        const response = await axios.post('http://orif.bui.uz/index2.asp', formDataToSend, {
+        const response = await axios.post('http://tjqqt.uz/index2.asp', formDataToSend, {
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
           }
@@ -134,13 +134,13 @@ function Header() {
           // Redirect based on role
           switch (role) {
             case '3': // Menejer
-              window.location.href = 'http://orif.bui.uz/lms_menjer.asp';
+              window.location.href = 'http://tjqqt.uz/lms_menjer.asp';
               break;
             case '2': // Ma'ruzachi
-              window.location.href = 'http://orif.bui.uz/lms.asp';
+              window.location.href = 'http://tjqqt.uz/lms.asp';
               break;
             case '1': // Tinglovchi
-              window.location.href = 'http://orif.bui.uz/lms_tinglovchi.asp';
+              window.location.href = 'http://tjqqt.uz/lms_tinglovchi.asp';
               break;
             default:
               alert('Noma\'lum foydalanuvchi turi');
