@@ -22,6 +22,16 @@ function Header() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [registerMode,setRegisterMode]=useState({
+    fam:'',
+    ism:'',
+    otasi:'',
+    tel:'',
+    login:'',
+    parol:'',
+    parol2:'',
+  })
   
   // Foydalanuvchi ma'lumotlari
   const user = {
@@ -92,6 +102,82 @@ function Header() {
     });
   };
 
+
+
+  const handleRegisterInput = (e, field) => {
+    setRegisterMode(prev => ({
+      ...prev,
+      [field]: e.target.value
+    }));
+  };
+
+  const handleRegisterSubmit = async (e) => {
+    e.preventDefault();
+    if (registerMode.parol !== registerMode.parol2) {
+      alert("Parollar bir xil emas!");
+      return;
+    }
+
+    console.log(registerMode);
+    
+
+    try {
+      const formData = new URLSearchParams();
+      formData.append('fam', registerMode.fam);
+      formData.append('ism', registerMode.ism);
+      formData.append('otasi', registerMode.otasi);
+      formData.append('tel', registerMode.tel);
+      formData.append('login', registerMode.login);
+      formData.append('parol', registerMode.parol);
+      formData.append('parol2', registerMode.parol2);
+      const response = await axios.post('https://tjqqt.uz/register2.asp', formData, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        }
+      });
+
+      // Handle successful registration
+      if (response.data) {
+        alert('Muvaffaqiyatli ro\'yxatdan o\'tdingiz!');
+        console.log(formData);
+        
+        // Clear form
+        setRegisterMode({
+          fam: '',
+          ism: '',
+          otasi: '',
+          tel: '',
+          login: '',
+          parol: '',
+          parol2: '',
+        });
+
+        // Close modal
+        setIsAuthModalOpen(false);
+        
+        // Optionally redirect to login
+        setAuthMode('login');
+      }
+
+    } catch (error) {
+      // Handle errors
+      console.error('Registration error:', error);
+      
+      if (error.response) {
+        // Server responded with error
+        alert(`Xatolik yuz berdi: ${error.response.data || 'Ro\'yxatdan o\'tib bo\'lmadi'}`);
+      } else if (error.request) {
+        // No response received
+        alert('Server bilan bog\'lanishda xatolik yuz berdi. Iltimos qaytadan urinib ko\'ring.');
+      } else {
+        // Other errors
+        alert('Ro\'yxatdan o\'tishda xatolik yuz berdi. Iltimos qaytadan urinib ko\'ring.');
+      }
+    }
+  };
+
+  
+  
   const handleAuthSubmit = async (e) => {
     e.preventDefault();
   
@@ -116,7 +202,7 @@ function Header() {
   
       try {
         // Send login request
-        const response = await axios.post('http://tjqqt.uz/index2.asp', formDataToSend, {
+        const response = await axios.post('https://tjqqt.uz/index2.asp', formDataToSend, {
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
           }
@@ -134,13 +220,13 @@ function Header() {
           // Redirect based on role
           switch (role) {
             case '3': // Menejer
-              window.location.href = 'http://tjqqt.uz/lms_menjer.asp';
+              window.location.href = 'https://tjqqt.uz/lms_menjer.asp';
               break;
             case '2': // Ma'ruzachi
-              window.location.href = 'http://tjqqt.uz/lms.asp';
+              window.location.href = 'https://tjqqt.uz/lms.asp';
               break;
             case '1': // Tinglovchi
-              window.location.href = 'http://tjqqt.uz/lms_tinglovchi.asp';
+              window.location.href = 'https://tjqqt.uz/lms_tinglovchi.asp';
               break;
             default:
               alert('Noma\'lum foydalanuvchi turi');
@@ -612,11 +698,31 @@ function Header() {
               </div>
 
               {/* Form */}
-              <form onSubmit={handleAuthSubmit} className="space-y-6">
+              <form onSubmit={authMode === 'register' ? handleRegisterSubmit : handleAuthSubmit} className="space-y-6">
+                {authMode === 'register' && (
+                  <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Familya
+                  </label>
+                  <div className="mt-1 relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
+                      <FiUser className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      required
+                      value={registerMode.fam}
+                      onChange={(e) => handleRegisterInput(e, 'fam')}
+                      className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-xl outline-none transition-all duration-300 hover:border-blue-500"
+                      placeholder="Familyangizni kiriting"
+                    />
+                  </div>
+                </div>
+                )}
                 {authMode === 'register' && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
-                      To'liq ism
+                      Ism
                     </label>
                     <div className="mt-1 relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
@@ -625,8 +731,8 @@ function Header() {
                       <input
                         type="text"
                         required
-                        value={formData.name}
-                        onChange={(e) => setFormData({...formData, name: e.target.value})}
+                        value={registerMode.ism}
+                        onChange={(e) => handleRegisterInput(e, 'ism')}
                         className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-xl outline-none transition-all duration-300 hover:border-blue-500"
                         placeholder="Ismingizni kiriting"
                       />
@@ -656,19 +762,19 @@ function Header() {
                 ) : (
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
-                      Email
+                      Sharifingizni kiriting
                     </label>
                     <div className="mt-1 relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                        <FiMail className="h-5 w-5 text-gray-400" />
+                        <FiUser className="h-5 w-5 text-gray-400" />
                       </div>
                       <input
-                        type="email"
+                        type="text"
                         required
-                        value={formData.email}
-                        onChange={(e) => setFormData({...formData, email: e.target.value})}
+                        value={registerMode.otasi}
+                        onChange={(e) => handleRegisterInput(e, 'otasi')}
                         className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-xl outline-none transition-all duration-300 hover:border-blue-500"
-                        placeholder="email@example.com"
+                        placeholder="Sharifingizni kiriting"
                       />
                     </div>
                   </div>
@@ -686,8 +792,8 @@ function Header() {
                       <input
                         type="tel"
                         required
-                        value={formData.phone}
-                        onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                        value={registerMode.tel}
+                        onChange={(e) => handleRegisterInput(e, 'tel')}
                         className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-xl outline-none transition-all duration-300 hover:border-blue-500"
                         placeholder="+998 90 123 45 67"
                       />
@@ -695,7 +801,8 @@ function Header() {
                   </div>
                 )}
 
-                <div>
+              {authMode==="login" &&(
+                  <div>
                   <label className="block text-sm font-medium text-gray-700">
                     Foydalanuvchi turi
                   </label>
@@ -719,41 +826,64 @@ function Header() {
                     </div>
                   </div>
                 </div>
+              )}
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Parol
-                  </label>
-                  <div className="mt-1 relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                      <FiLock className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      required
-                      value={formData.password}
-                      onChange={(e) => setFormData({...formData, password: e.target.value})}
-                      className="pl-10 pr-12 w-full px-4 py-2 border border-gray-300 rounded-xl outline-none transition-all duration-300 hover:border-blue-500"
-                      placeholder="••••••••"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                    >
-                      {showPassword ? (
-                        <FiEyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                      ) : (
-                        <FiEye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                      )}
-                    </button>
-                  </div>
-                </div>
+               {authMode==="login" &&(
+                 <div>
+                 <label className="block text-sm font-medium text-gray-700">
+                   Parol
+                 </label>
+                 <div className="mt-1 relative">
+                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
+                     <FiLock className="h-5 w-5 text-gray-400" />
+                   </div>
+                   <input
+                     type={showPassword ? "text" : "password"}
+                     required
+                     value={formData.password}
+                     onChange={(e) => setFormData({...formData, password: e.target.value})}
+                     className="pl-10 pr-12 w-full px-4 py-2 border border-gray-300 rounded-xl outline-none transition-all duration-300 hover:border-blue-500"
+                     placeholder="••••••••"
+                   />
+                   <button
+                     type="button"
+                     onClick={() => setShowPassword(!showPassword)}
+                     className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                   >
+                     {showPassword ? (
+                       <FiEye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                     ) : (
+                       <FiEyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                     )}
+                   </button>
+                 </div>
+               </div>
+               )}
 
                 {authMode === 'register' && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
-                      Parolni tasdiqlang
+                      Login
+                    </label>
+                    <div className="mt-1 relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
+                        <FiLock className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="text"
+                        required
+                        value={registerMode.login}
+                        onChange={(e) => handleRegisterInput(e, 'login')}
+                        className="pl-10 pr-12 w-full px-4 py-2 border border-gray-300 rounded-xl outline-none transition-all duration-300 hover:border-blue-500"
+                        placeholder="••••••••"
+                      />
+                    </div>
+                  </div>
+                )}
+                 {authMode === 'register' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Parol
                     </label>
                     <div className="mt-1 relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
@@ -762,8 +892,8 @@ function Header() {
                       <input
                         type={showConfirmPassword ? "text" : "password"}
                         required
-                        value={formData.confirmPassword}
-                        onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+                        value={registerMode.parol}
+                        onChange={(e) => handleRegisterInput(e, 'parol')}
                         className="pl-10 pr-12 w-full px-4 py-2 border border-gray-300 rounded-xl outline-none transition-all duration-300 hover:border-blue-500"
                         placeholder="••••••••"
                       />
@@ -773,9 +903,40 @@ function Header() {
                         className="absolute inset-y-0 right-0 pr-3 flex items-center"
                       >
                         {showConfirmPassword ? (
-                          <FiEyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                        ) : (
                           <FiEye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                        ) : (
+                          <FiEyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
+                 {authMode === 'register' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Parolni qayta kiriting
+                    </label>
+                    <div className="mt-1 relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
+                        <FiLock className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type={showConfirmPassword ? "text" : "password"}
+                        required
+                        value={registerMode.parol2}
+                        onChange={(e) => handleRegisterInput(e, 'parol2')}
+                        className="pl-10 pr-12 w-full px-4 py-2 border border-gray-300 rounded-xl outline-none transition-all duration-300 hover:border-blue-500"
+                        placeholder="••••••••"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                      >
+                        {showConfirmPassword ? (
+                          <FiEye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                        ) : (
+                          <FiEyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
                         )}
                       </button>
                     </div>
@@ -823,30 +984,30 @@ function Header() {
 
               {/* Footer */}
               <div className="mt-6 text-center">
-                <p className="text-sm text-gray-600">
-                  {authMode === 'login' ? (
-                    <>
-                      Hisobingiz yo'qmi?{' '}
-                      <button
-                        onClick={() => setAuthMode('register')}
-                        className="font-medium text-blue-600 hover:text-blue-500"
-                      >
-                        Ro'yxatdan o'ting
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      Allaqachon hisobingiz bormi?{' '}
-                      <button
-                        onClick={() => setAuthMode('login')}
-                        className="font-medium text-blue-600 hover:text-blue-500"
-                      >
-                        Tizimga kiring
-                      </button>
-                    </>
-                  )}
-                </p>
-              </div>
+  <p className="text-sm text-gray-600">
+    {authMode === 'login' ? (
+      <>
+        Hisobingiz yo'qmi?{' '}
+        <button
+           onClick={() => window.location.href = 'https://tjqqt.uz/register2.asp'}
+          className="font-medium text-blue-600 hover:text-blue-500"
+        >
+          Ro'yxatdan o'ting
+        </button>
+      </>
+    ) : (
+      <>
+        Allaqachon hisobingiz bormi?{' '}
+        <button
+          onClick={() => setAuthMode('login')}
+          className="font-medium text-blue-600 hover:text-blue-500"
+        >
+          Tizimga kiring
+        </button>
+      </>
+    )}
+  </p>
+</div>
             </div>
           </div>
         </div>
